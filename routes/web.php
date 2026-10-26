@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BeritaAcaraController;
+use App\Http\Controllers\InspectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,7 +15,10 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
 
-    // Profile
+    // =========================
+    // PROFILE
+    // =========================
+
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
 
@@ -65,7 +69,63 @@ Route::middleware('auth')->group(function () {
     Route::get('/berita-acara/{beritaAcara}', [BeritaAcaraController::class, 'show'])
         ->name('berita-acara.show');
 
-    // Log Aktivitas
+
+    // =========================
+    // INSPEKSI GERAI
+    // =========================
+
+    // Daftar inspeksi
+    Route::get('/inspections', [InspectionController::class, 'index'])
+        ->name('inspections.index');
+
+    // Form inspeksi baru
+    Route::get('/inspections/create', [InspectionController::class, 'create'])
+        ->name('inspections.create');
+
+    // Simpan inspeksi baru
+    Route::post('/inspections', [InspectionController::class, 'store'])
+        ->name('inspections.store');
+
+    // Simpan checklist inspeksi
+    Route::put('/inspections/{inspection}/checklist', [InspectionController::class, 'saveChecklist'])
+        ->name('inspections.checklist.save');
+
+    // Tambah kriteria checklist khusus
+    Route::post('/inspections/{inspection}/checklist-items', [InspectionController::class, 'addChecklistItem'])
+        ->name('inspections.checklist-items.store');
+
+    // Form edit identitas inspeksi
+    Route::get('/inspections/{inspection}/edit', [InspectionController::class, 'edit'])
+        ->name('inspections.edit');
+
+    // Update identitas inspeksi
+    Route::put('/inspections/{inspection}', [InspectionController::class, 'update'])
+        ->name('inspections.update');
+
+    // Simpan temuan inspeksi
+    Route::post('/inspections/{inspection}/findings', [InspectionController::class, 'storeFinding'])
+        ->name('inspections.findings.store');
+
+    // Simpan foto inspeksi
+    Route::post('/inspections/{inspection}/photos', [InspectionController::class, 'storePhoto'])
+        ->name('inspections.photos.store');
+
+    // Simpan tanda tangan digital Pihak Pertama / Pihak Kedua
+    Route::post('/inspections/{inspection}/signatures', [InspectionController::class, 'saveSignature'])
+        ->name('inspections.signatures.save');
+
+    // Detail inspeksi (letakkan setelah route spesifik)
+    Route::get('/inspections/{inspection}', [InspectionController::class, 'show'])
+        ->name('inspections.show');
+
+    Route::get('/inspections/{inspection}/pdf', [InspectionController::class, 'downloadPdf'])
+        ->name('inspections.pdf');
+
+
+    // =========================
+    // LOG AKTIVITAS
+    // =========================
+
     Route::get('/activity-logs', [BeritaAcaraController::class, 'activityLogs'])
         ->name('activity-logs.index');
 
