@@ -438,6 +438,45 @@ class BeritaAcaraController extends Controller
             'signature_upload_pihak_kedua'
         );
 
+         /*
+        |--------------------------------------------------------------------------
+        | CEK KELENGKAPAN DAN UPDATE STATUS OTOMATIS
+        |--------------------------------------------------------------------------
+        */
+
+        $beritaAcara->load([
+            'checklistItems',
+            'signatures',
+        ]);
+
+        $semuaChecklistLengkap =
+            $beritaAcara->checklistItems->isNotEmpty()
+            && $beritaAcara->checklistItems->every(
+                fn ($item) => (bool) $item->is_checked
+            );
+
+        $pihakPertama = $beritaAcara->signatures
+            ->firstWhere('pihak', 'Pihak Pertama');
+
+        $pihakKedua = $beritaAcara->signatures
+            ->firstWhere('pihak', 'Pihak Kedua');
+
+        $semuaTandaTanganLengkap =
+            $pihakPertama
+            && !empty($pihakPertama->signature_file)
+            && $pihakKedua
+            && !empty($pihakKedua->signature_file);
+
+        $statusBaru =
+            ($semuaChecklistLengkap && $semuaTandaTanganLengkap)
+                ? 'selesai'
+                : 'draft';
+
+        $beritaAcara->update([
+            'status' => $statusBaru,
+        ]);
+
+        $beritaAcara->refresh();
         /*
         |--------------------------------------------------------------------------
         | CATAT PERUBAHAN

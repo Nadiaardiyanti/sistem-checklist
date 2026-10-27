@@ -110,6 +110,15 @@
             overflow-wrap: break-word;
         }
 
+        /* Header tabel checklist: biru tua dan tulisan putih */
+        .checklist thead th {
+        background-color: #4472C4;
+        color: #FFFFFF;
+        font-weight: bold;
+        text-align: center;
+        vertical-align: middle;
+        }
+
         .checklist .code {
             width: 8%;
             text-align: center;
@@ -132,6 +141,27 @@
         .category-row td {
             background: #e8ebef;
             font-weight: bold;
+        }
+
+        /* Baris checklist sesuai: putih */
+        .checklist tr.status-sesuai td {
+        background-color: #ffffff;
+        }
+
+        /* Baris checklist tidak sesuai: merah muda */
+        .checklist tr.status-tidak-sesuai td {
+         background-color: #fcebea;
+        }
+
+        /* Baris checklist tidak berlaku: abu-abu */
+        .checklist tr.status-tidak-berlaku td {
+        background-color: #e0e0e0;
+        }
+
+        /* Judul kategori tetap biru */
+        .checklist tr.category-row td {
+        background-color: #b4c7e7;
+        font-weight: bold;
         }
 
         .check {
@@ -431,32 +461,33 @@
                     </td>
                 </tr>
 
-                @foreach ($items as $item)
-                    <tr>
-                        <td class="center">{{ $item->code ?: '-' }}</td>
-                        <td>{{ $item->criteria }}</td>
+                ```blade
+            @foreach ($items as $item)
+              <tr class="@if ($item->status === 'sesuai') status-sesuai @elseif ($item->status === 'tidak_sesuai') status-tidak-sesuai @elseif ($item->status === 'tidak_berlaku') status-tidak-berlaku @endif">
+                <td class="center">{{ $item->code ?: '-' }}</td>
+                <td>{{ $item->criteria }}</td>
 
-                        <td class="result">
-                            @if ($item->status === 'sesuai')
-                                <span class="check">✓</span>
-                            @endif
-                        </td>
+                <td class="result">
+                @if ($item->status === 'sesuai')
+                <span class="check">✓</span>
+            @endif
+        </td>
 
-                        <td class="result">
-                            @if ($item->status === 'tidak_sesuai')
-                                <span class="check">✓</span>
-                            @endif
-                        </td>
+        <td class="result">
+            @if ($item->status === 'tidak_sesuai')
+                <span class="check">✓</span>
+            @endif
+        </td>
 
-                        <td class="result">
-                            @if ($item->status === 'tidak_berlaku')
-                                <span class="check">✓</span>
-                            @endif
-                        </td>
+        <td class="result">
+            @if ($item->status === 'tidak_berlaku')
+                <span class="check">✓</span>
+            @endif
+        </td>
 
-                        <td>{{ $item->notes ?: '-' }}</td>
-                    </tr>
-                @endforeach
+        <td>{{ $item->notes ?: '-' }}</td>
+         </tr>
+            @endforeach
             @endforeach
         </tbody>
     </table>

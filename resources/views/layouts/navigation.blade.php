@@ -1,4 +1,3 @@
-```blade
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,14 +20,6 @@
                         :active="request()->routeIs('dashboard')"
                     >
                         {{ __('Dashboard') }}
-                    </x-nav-link>
-
-                    <!-- Berita Acara -->
-                    <x-nav-link
-                        :href="route('berita-acara.index')"
-                        :active="request()->routeIs('berita-acara.*')"
-                    >
-                        {{ __('Berita Acara') }}
                     </x-nav-link>
 
                     <!-- Inspeksi Gerai -->
@@ -146,14 +137,6 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
 
-            <!-- Berita Acara -->
-            <x-responsive-nav-link
-                :href="route('berita-acara.index')"
-                :active="request()->routeIs('berita-acara.*')"
-            >
-                {{ __('Berita Acara') }}
-            </x-responsive-nav-link>
-
             <!-- Inspeksi Gerai -->
             <x-responsive-nav-link
                 :href="route('inspections.index')"
@@ -204,4 +187,3 @@
         </div>
     </div>
 </nav>
-```

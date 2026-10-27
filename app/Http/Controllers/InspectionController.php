@@ -177,6 +177,9 @@ class InspectionController extends Controller
         ) {
             $inspection->update($validated);
 
+            // Periksa kembali status jika identitas inspeksi berubah.
+            $this->syncInspectionStatus($inspection);
+
             InspectionActivityLog::create([
                 'inspection_id' => $inspection->id,
                 'user_id' => $request->user()->id,
@@ -232,6 +235,9 @@ class InspectionController extends Controller
 
                 $updatedCount++;
             }
+
+            // Periksa status setelah checklist disimpan.
+            $this->syncInspectionStatus($inspection);
 
             InspectionActivityLog::create([
                 'inspection_id' => $inspection->id,
@@ -297,6 +303,9 @@ class InspectionController extends Controller
                 'is_custom' => true,
                 'sort_order' => ($lastSortOrder ?? 0) + 1,
             ]);
+
+            // Checklist baru belum diisi, sehingga status akan diperiksa ulang.
+            $this->syncInspectionStatus($inspection);
 
             InspectionActivityLog::create([
                 'inspection_id' => $inspection->id,
@@ -467,13 +476,13 @@ class InspectionController extends Controller
     /**
      * Menyimpan atau memperbarui tanda tangan digital.
      *
-     * Pihak Pertama:
-     * - Perusahaan tetap PT ANGKASA PURA INDONESIA (PERSERO).
+     * Pihak pertama:
+     * - Perusahaan PT ANGKASA PURA INDONESIA (PERSERO).
      * - Nama dan jabatan mengikuti data inspektor.
      *
-     * Pihak Kedua:
+     * Pihak kedua:
      * - Perusahaan mengikuti nama mitra.
-     * - Nama perwakilan dan jabatan diisi pengguna.
+     * - Nama dan jabatan diisi pengguna.
      *
      * Mendukung tanda tangan dari canvas maupun file upload.
      */
@@ -499,10 +508,6 @@ class InspectionController extends Controller
             ],
         ]);
 
-        /*
-         * Data penanda tangan ditentukan di server.
-         * Jangan mengambil nama perusahaan dari input browser.
-         */
         if ($validated['party'] === 'pihak_pertama') {
             $companyName = 'PT ANGKASA PURA INDONESIA (PERSERO)';
             $signerName = $inspection->inspector_name;
@@ -544,9 +549,7 @@ class InspectionController extends Controller
 
         $path = null;
 
-        /*
-         * Upload gambar diprioritaskan jika tersedia.
-         */
+        // Upload gambar diprioritaskan jika tersedia.
         if ($request->hasFile('signature_upload')) {
             $path = $request->file('signature_upload')->store(
                 'inspections/' . $inspection->id . '/signatures',
@@ -653,6 +656,9 @@ class InspectionController extends Controller
                     ));
                 }
 
+                // Periksa status setelah tanda tangan tersimpan.
+                $this->syncInspectionStatus($inspection);
+
                 InspectionActivityLog::create([
                     'inspection_id' => $inspection->id,
                     'user_id' => $request->user()->id,
@@ -677,50 +683,102 @@ class InspectionController extends Controller
     }
 
     /**
- * Download laporan hasil inspeksi dalam format PDF.
- */
-public function downloadPdf(Inspection $inspection)
-{
-    $inspection->load([
-        'checklistItems',
-        'findings',
-        'signatures',
-        'photos',
-    ]);
+     * Memperbarui status inspeksi secara otomatis.
+     *
+     * Status completed diberikan jika:
+     * - Checklist tidak kosong dan seluruh item telah dinilai.
+     * - Pihak pertama dan pihak kedua telah memiliki file tanda tangan.
+     *
+     * Selain itu, status menjadi draft.
+     */
+    private function syncInspectionStatus(Inspection $inspection): void
+    {
+        $checklistItems = $inspection->checklistItems()->get();
 
-    $checklistItems = $inspection->checklistItems
-        ->sortBy([
-            ['section_code', 'asc'],
-            ['sort_order', 'asc'],
-        ])
-        ->values();
+        $semuaChecklistLengkap = $checklistItems->isNotEmpty()
+            && $checklistItems->every(function ($item) {
+                return in_array($item->status, [
+                    'sesuai',
+                    'tidak_sesuai',
+                    'tidak_berlaku',
+                ], true);
+            });
 
-    $findings = $inspection->findings
-        ->sortBy('sort_order')
-        ->values();
+        $signatures = $inspection->signatures()->get();
 
-    $photos = $inspection->photos
-        ->sortBy('sort_order')
-        ->values();
+        $pihakPertama = $signatures->firstWhere(
+            'party',
+            'pihak_pertama'
+        );
 
-    $signatures = $inspection->signatures
-        ->keyBy('party');
+        $pihakKedua = $signatures->firstWhere(
+            'party',
+            'pihak_kedua'
+        );
 
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
-        'inspections.pdf',
-        compact(
-            'inspection',
+        $semuaTandaTanganLengkap =
+            $pihakPertama !== null
+            && !empty($pihakPertama->signature_path)
+            && $pihakKedua !== null
+            && !empty($pihakKedua->signature_path);
+
+        $statusBaru = (
+            $semuaChecklistLengkap
+            && $semuaTandaTanganLengkap
+        ) ? 'completed' : 'draft';
+
+        if ($inspection->status !== $statusBaru) {
+            $inspection->update([
+                'status' => $statusBaru,
+            ]);
+        }
+    }
+
+    /**
+     * Download laporan hasil inspeksi dalam format PDF.
+     */
+    public function downloadPdf(Inspection $inspection)
+    {
+        $inspection->load([
             'checklistItems',
             'findings',
+            'signatures',
             'photos',
-            'signatures'
-        )
-    );
+        ]);
 
-    $pdf->setPaper('a4', 'portrait');
+        $checklistItems = $inspection->checklistItems
+            ->sortBy([
+                ['section_code', 'asc'],
+                ['sort_order', 'asc'],
+            ])
+            ->values();
 
-    return $pdf->download(
-        'Laporan-Inspeksi-' . $inspection->inspection_number . '.pdf'
-    );
-}
+        $findings = $inspection->findings
+            ->sortBy('sort_order')
+            ->values();
+
+        $photos = $inspection->photos
+            ->sortBy('sort_order')
+            ->values();
+
+        $signatures = $inspection->signatures
+            ->keyBy('party');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'inspections.pdf',
+            compact(
+                'inspection',
+                'checklistItems',
+                'findings',
+                'photos',
+                'signatures'
+            )
+        );
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download(
+            'Laporan-Inspeksi-' . $inspection->inspection_number . '.pdf'
+        );
+    }
 }
