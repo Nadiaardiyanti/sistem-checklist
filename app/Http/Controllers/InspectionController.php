@@ -682,57 +682,63 @@ class InspectionController extends Controller
             ->with('success', 'Tanda tangan berhasil disimpan.');
     }
 
-    /**
-     * Memperbarui status inspeksi secara otomatis.
-     *
-     * Status completed diberikan jika:
-     * - Checklist tidak kosong dan seluruh item telah dinilai.
-     * - Pihak pertama dan pihak kedua telah memiliki file tanda tangan.
-     *
-     * Selain itu, status menjadi draft.
-     */
-    private function syncInspectionStatus(Inspection $inspection): void
-    {
-        $checklistItems = $inspection->checklistItems()->get();
 
-        $semuaChecklistLengkap = $checklistItems->isNotEmpty()
-            && $checklistItems->every(function ($item) {
-                return in_array($item->status, [
-                    'sesuai',
-                    'tidak_sesuai',
-                    'tidak_berlaku',
-                ], true);
-            });
+/**
+ * Memperbarui status inspeksi secara otomatis.
+ *
+ * Status completed diberikan jika:
+ * - Checklist tidak kosong dan seluruh item telah dinilai.
+ * - Pihak pertama dan pihak kedua telah memiliki tanda tangan.
+ *
+ * Hasil checklist tidak_sesuai tetap dianggap sebagai
+ * hasil pemeriksaan yang valid.
+ */
+private function syncInspectionStatus(Inspection $inspection): void
+{
+    $checklistItems = $inspection->checklistItems()->get();
 
-        $signatures = $inspection->signatures()->get();
+    // Pastikan checklist tersedia dan seluruh item telah dinilai.
+    $semuaChecklistLengkap = $checklistItems->isNotEmpty()
+        && $checklistItems->every(function ($item) {
+            return in_array($item->status, [
+                'sesuai',
+                'tidak_sesuai',
+                'tidak_berlaku',
+            ], true);
+        });
 
-        $pihakPertama = $signatures->firstWhere(
-            'party',
-            'pihak_pertama'
-        );
+    // Ambil tanda tangan kedua pihak.
+    $signatures = $inspection->signatures()->get();
 
-        $pihakKedua = $signatures->firstWhere(
-            'party',
-            'pihak_kedua'
-        );
+    $pihakPertama = $signatures->firstWhere(
+        'party',
+        'pihak_pertama'
+    );
 
-        $semuaTandaTanganLengkap =
-            $pihakPertama !== null
-            && !empty($pihakPertama->signature_path)
-            && $pihakKedua !== null
-            && !empty($pihakKedua->signature_path);
+    $pihakKedua = $signatures->firstWhere(
+        'party',
+        'pihak_kedua'
+    );
 
-        $statusBaru = (
-            $semuaChecklistLengkap
-            && $semuaTandaTanganLengkap
-        ) ? 'completed' : 'draft';
+    $semuaTandaTanganLengkap =
+        $pihakPertama !== null
+        && !empty($pihakPertama->signature_path)
+        && $pihakKedua !== null
+        && !empty($pihakKedua->signature_path);
 
-        if ($inspection->status !== $statusBaru) {
-            $inspection->update([
-                'status' => $statusBaru,
-            ]);
-        }
+    // Status completed ditentukan dari kelengkapan proses,
+    // bukan dari apakah semua hasil checklist sesuai.
+    $statusBaru = (
+        $semuaChecklistLengkap
+        && $semuaTandaTanganLengkap
+    ) ? 'completed' : 'draft';
+
+    if ($inspection->status !== $statusBaru) {
+        $inspection->update([
+            'status' => $statusBaru,
+        ]);
     }
+}
 
     /**
      * Download laporan hasil inspeksi dalam format PDF.

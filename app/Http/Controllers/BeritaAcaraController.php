@@ -983,20 +983,21 @@ class BeritaAcaraController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function activityLogs()
-    {
-        $activityLogs = ActivityLog::with([
-            'user',
-            'beritaAcara',
-        ])
-            ->latest()
-            ->paginate(15);
+    
+public function activityLogs()
+{
+    $activityLogs = \App\Models\InspectionActivityLog::with([
+        'user',
+        'inspection',
+    ])
+        ->latest()
+        ->paginate(15);
 
-        return view(
-            'activity-logs.index',
-            compact('activityLogs')
-        );
-    }
+    return view(
+        'activity-logs.index',
+        compact('activityLogs')
+    );
+}
 
     /*
     |--------------------------------------------------------------------------

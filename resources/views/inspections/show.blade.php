@@ -589,18 +589,20 @@
                         </label>
 
                         <select name="checklist_item_id"
-                                id="checklist_item_id"
-                                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-[#17365D] focus:ring-[#17365D]">
-                            <option value="">-- Pilih Kriteria --</option>
+        id="checklist_item_id"
+        class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-[#17365D] focus:ring-[#17365D]">
 
-                            @foreach ($checklistItems as $item)
-                                <option value="{{ $item->id }}"
-                                    @selected(old('checklist_item_id') == $item->id)>
-                                    {{ $item->code ? $item->code . ' - ' : '' }}
-                                    {{ $item->criteria }}
-                                </option>
-                            @endforeach
-                        </select>
+    <option value="">-- Pilih Kriteria Tidak Sesuai --</option>
+
+    @foreach ($checklistItems->where('status', 'tidak_sesuai') as $item)
+        <option value="{{ $item->id }}"
+            @selected(old('checklist_item_id') == $item->id)>
+            {{ $item->code ? $item->code . ' - ' : '' }}
+            {{ $item->criteria }}
+        </option>
+    @endforeach
+
+</select>
                     </div>
 
                     <div>

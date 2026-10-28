@@ -5,22 +5,15 @@ namespace App\Services;
 use Google\Client;
 use Google\Service\Sheets;
 use Google\Service\Sheets\ValueRange;
+use RuntimeException;
 
 class GoogleSheetsService
 {
-    protected Sheets $service;
-    protected string $spreadsheetId;
+    protected ?Sheets $service = null;
+    protected string $spreadsheetId = '';
 
     public function __construct()
     {
-        $client = new Client();
-
-        $client->setApplicationName('Komersial BA');
-
-        $client->setScopes([
-            Sheets::SPREADSHEETS,
-        ]);
-
         $credentialsPath = storage_path(
             env(
                 'GOOGLE_SHEETS_CREDENTIALS',
@@ -28,16 +21,40 @@ class GoogleSheetsService
             )
         );
 
+        $spreadsheetId = env('GOOGLE_SHEETS_SPREADSHEET_ID');
+
+        // Jangan inisialisasi Google Sheets jika konfigurasi belum tersedia.
+        if (
+            !is_file($credentialsPath) ||
+            empty($spreadsheetId)
+        ) {
+            return;
+        }
+
+        $client = new Client();
+
+        $client->setApplicationName('SPS');
+        $client->setScopes([
+            Sheets::SPREADSHEETS,
+        ]);
+
         $client->setAuthConfig($credentialsPath);
 
         $this->service = new Sheets($client);
-
-        $this->spreadsheetId = env('GOOGLE_SHEETS_SPREADSHEET_ID');
+        $this->spreadsheetId = $spreadsheetId;
     }
 
-    /**
-     * Menambahkan data baru ke Google Sheets.
-     */
+    protected function getService(): Sheets
+    {
+        if ($this->service === null) {
+            throw new RuntimeException(
+                'Google Sheets belum dikonfigurasi. Periksa credentials.json dan GOOGLE_SHEETS_SPREADSHEET_ID.'
+            );
+        }
+
+        return $this->service;
+    }
+
     public function append(
         string $sheetName,
         array $values
@@ -46,26 +63,24 @@ class GoogleSheetsService
             'values' => [$values],
         ]);
 
-        $this->service->spreadsheets_values->append(
-            $this->spreadsheetId,
-            $sheetName,
-            $body,
-            [
-                'valueInputOption' => 'USER_ENTERED',
-                'insertDataOption' => 'INSERT_ROWS',
-            ]
-        );
+        $this->getService()
+            ->spreadsheets_values
+            ->append(
+                $this->spreadsheetId,
+                $sheetName,
+                $body,
+                [
+                    'valueInputOption' => 'USER_ENTERED',
+                    'insertDataOption' => 'INSERT_ROWS',
+                ]
+            );
     }
 
-    /**
-     * Mencari nomor baris berdasarkan ID BA
-     * yang berada di kolom A.
-     */
     public function findRowById(
         string $sheetName,
         string|int $id
     ): ?int {
-        $response = $this->service
+        $response = $this->getService()
             ->spreadsheets_values
             ->get(
                 $this->spreadsheetId,
@@ -79,14 +94,14 @@ class GoogleSheetsService
         }
 
         foreach ($values as $index => $row) {
-
-            // Lewati header
             if ($index === 0) {
                 continue;
             }
 
-            if (isset($row[0]) && (string) $row[0] === (string) $id) {
-                // Google Sheets menggunakan nomor baris mulai dari 1
+            if (
+                isset($row[0]) &&
+                (string) $row[0] === (string) $id
+            ) {
                 return $index + 1;
             }
         }
@@ -94,9 +109,6 @@ class GoogleSheetsService
         return null;
     }
 
-    /**
-     * Mengupdate satu baris berdasarkan nomor baris.
-     */
     public function updateRow(
         string $sheetName,
         int $rowNumber,
@@ -104,13 +116,15 @@ class GoogleSheetsService
     ): void {
         $lastColumn = $this->columnLetter(count($values));
 
-        $range = $sheetName . '!A' . $rowNumber . ':' . $lastColumn . $rowNumber;
+        $range = $sheetName
+            . '!A' . $rowNumber
+            . ':' . $lastColumn . $rowNumber;
 
         $body = new ValueRange([
             'values' => [$values],
         ]);
 
-        $this->service
+        $this->getService()
             ->spreadsheets_values
             ->update(
                 $this->spreadsheetId,
@@ -122,9 +136,6 @@ class GoogleSheetsService
             );
     }
 
-    /**
-     * Mencari ID BA lalu mengupdate datanya.
-     */
     public function updateById(
         string $sheetName,
         string|int $id,
@@ -148,23 +159,16 @@ class GoogleSheetsService
         return true;
     }
 
-    /**
-     * Mengubah jumlah kolom menjadi huruf Excel/Google Sheets.
-     *
-     * Contoh:
-     * 1  = A
-     * 10 = J
-     * 26 = Z
-     * 27 = AA
-     */
-    private function columnLetter(int $columnNumber): string
-    {
+    private function columnLetter(
+        int $columnNumber
+    ): string {
         $columnLetter = '';
 
         while ($columnNumber > 0) {
             $remainder = ($columnNumber - 1) % 26;
 
-            $columnLetter = chr(65 + $remainder) . $columnLetter;
+            $columnLetter = chr(65 + $remainder)
+                . $columnLetter;
 
             $columnNumber = intdiv(
                 $columnNumber - 1,
