@@ -5,6 +5,7 @@ use App\Http\Controllers\BeritaAcaraController;
 use App\Http\Controllers\InspectionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ActivityLogController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -126,9 +127,9 @@ Route::middleware('auth')->group(function () {
     // =========================
     // LOG AKTIVITAS
     // =========================
-
-    Route::get('/activity-logs', [BeritaAcaraController::class, 'activityLogs'])
-        ->name('activity-logs.index');
+    
+   Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+       ->name('activity-logs.index');
 
 });
 

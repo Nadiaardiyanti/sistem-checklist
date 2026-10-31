@@ -159,6 +159,64 @@ class GoogleSheetsService
         return true;
     }
 
+    /**
+     * Apakah kredensial dan ID spreadsheet sudah terkonfigurasi.
+     */
+    public function isConfigured(): bool
+    {
+        return $this->service !== null;
+    }
+
+    /**
+     * Baca seluruh isi kolom A pada sebuah sheet (termasuk baris header).
+     *
+     * @return array<int, string>
+     */
+    public function readColumn(string $sheetName): array
+    {
+        $response = $this->getService()
+            ->spreadsheets_values
+            ->get(
+                $this->spreadsheetId,
+                $sheetName . '!A:A'
+            );
+
+        return array_map(
+            fn ($row) => (string) ($row[0] ?? ''),
+            $response->getValues() ?? []
+        );
+    }
+
+    /**
+     * Tambahkan beberapa baris sekaligus dalam satu panggilan API.
+     *
+     * @param array<int, array<int, mixed>> $rows
+     */
+    public function appendMany(
+        string $sheetName,
+        array $rows
+    ): void {
+        if ($rows === []) {
+            return;
+        }
+
+        $body = new ValueRange([
+            'values' => array_values($rows),
+        ]);
+
+        $this->getService()
+            ->spreadsheets_values
+            ->append(
+                $this->spreadsheetId,
+                $sheetName,
+                $body,
+                [
+                    'valueInputOption' => 'USER_ENTERED',
+                    'insertDataOption' => 'INSERT_ROWS',
+                ]
+            );
+    }
+
     private function columnLetter(
         int $columnNumber
     ): string {

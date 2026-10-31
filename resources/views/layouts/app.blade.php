@@ -257,22 +257,20 @@
                         </svg>
                     </button>
 
-                    <div class="py-1">
+<div class="py-1">
     <p class="text-xs font-semibold tracking-wider text-slate-500">
         SISTEM MANAJEMEN
     </p>
 
-    <h2 class="mt-2 text-xl font-bold leading-tight text-slate-800 sm:text-2xl">
-    @isset($header)
-        {{ $header }}
-    @else
-        Dashboard
-    @endisset
-</h2>
-
-<p class="mt-1 text-sm text-slate-500">
-    Ringkasan kegiatan inspeksi gerai
-</p>
+    <div class="mt-1">
+        @isset($header)
+            {{ $header }}
+        @else
+            <h2 class="text-2xl font-bold leading-tight text-slate-800">
+                Dashboard
+            </h2>
+        @endisset
+    </div>
 </div>
 
                 </div>

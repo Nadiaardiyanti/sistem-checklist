@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-slate-800 sm:text-2xl">
+                <h2 class="text-2xl font-bold tracking-tight text-slate-800">
                     Detail Inspeksi Gerai
                 </h2>
 
@@ -16,54 +16,75 @@
 
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('inspections.index') }}"
-                   class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                   class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                    </svg>
                     Kembali
                 </a>
 
-                <a href="{{ route('inspections.edit', $inspection) }}"
-                   class="inline-flex items-center justify-center rounded-lg bg-[#17365D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#28558A]">
-                    Edit Inspeksi
-                </a>
-
                 <a href="{{ route('inspections.pdf', $inspection) }}"
-                   class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-4 w-4"
-                         fill="none"
-                         viewBox="0 0 24 24"
-                         stroke="currentColor"
-                         stroke-width="2">
-                        <path stroke-linecap="round"
-                              stroke-linejoin="round"
-                              d="M12 3v12m0 0l-4-4m4 4l4-4M5 17v3h14v-3"/>
+                   class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M5 17v3h14v-3"/>
                     </svg>
                     Download PDF
+                </a>
+
+                <a href="{{ route('inspections.edit', $inspection) }}"
+                   class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#17365D] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#28558A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#28558A] focus-visible:ring-offset-2">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z"/>
+                    </svg>
+                    Edit Inspeksi
                 </a>
             </div>
         </div>
     </x-slot>
 
-    <div class="min-h-screen bg-slate-50 py-8">
-        <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+    <div class="space-y-6 lg:space-y-8">
+
+            {{-- Navigasi cepat antar bagian --}}
+            <nav aria-label="Navigasi bagian halaman"
+                 class="sticky top-24 z-20 -mx-1 flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-sm backdrop-blur [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                @foreach ([
+                    '#informasi'    => 'Informasi',
+                    '#ringkasan'    => 'Ringkasan',
+                    '#checklist'    => 'Checklist',
+                    '#temuan'       => 'Temuan',
+                    '#tanda-tangan' => 'Tanda Tangan',
+                    '#foto'         => 'Foto',
+                ] as $anchor => $anchorLabel)
+                    <a href="{{ $anchor }}"
+                       class="whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-blue-50 hover:text-[#17365D] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                        {{ $anchorLabel }}
+                        @if ($anchor === '#temuan' && $findings->count() > 0)
+                            <span class="ml-1 rounded-full bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700">{{ $findings->count() }}</span>
+                        @elseif ($anchor === '#foto' && $photos->count() > 0)
+                            <span class="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">{{ $photos->count() }}</span>
+                        @endif
+                    </a>
+                @endforeach
+            </nav>
 
             {{-- Notifikasi --}}
             @if (session('success'))
                 <div role="alert"
-                     class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+                     class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if (session('error'))
                 <div role="alert"
-                     class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                     class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                     {{ session('error') }}
                 </div>
             @endif
 
             @if ($errors->any())
                 <div role="alert"
-                     class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                     class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                     <p class="mb-2 font-semibold">Terdapat kesalahan:</p>
                     <ul class="list-inside list-disc space-y-1">
                         @foreach ($errors->all() as $error)
@@ -74,7 +95,7 @@
             @endif
 
             {{-- Informasi Inspeksi --}}
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section id="informasi" class="scroll-mt-40 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-100 px-6 py-5">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
@@ -90,109 +111,116 @@
                             $status = $inspection->status ?? 'draft';
 
                             $statusClass = match ($status) {
-                                'completed' => 'bg-green-100 text-green-800',
-                                'in_progress' => 'bg-blue-100 text-blue-800',
-                                'cancelled' => 'bg-red-100 text-red-800',
-                                default => 'bg-amber-100 text-amber-800',
+                                'completed'   => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+                                'in_progress' => 'bg-blue-50 text-blue-700 ring-blue-600/20',
+                                'cancelled'   => 'bg-rose-50 text-rose-700 ring-rose-600/20',
+                                default       => 'bg-amber-50 text-amber-700 ring-amber-600/20',
+                            };
+
+                            $statusLabel = match ($status) {
+                                'completed'   => 'Selesai',
+                                'in_progress' => 'Berjalan',
+                                'cancelled'   => 'Dibatalkan',
+                                'draft'       => 'Draft',
+                                default       => ucfirst(str_replace('_', ' ', $status)),
                             };
                         @endphp
 
-                        <span class="inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-semibold {{ $statusClass }}">
-                            {{ ucfirst(str_replace('_', ' ', $status)) }}
+                        <span class="inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset {{ $statusClass }}">
+                            <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                            {{ $statusLabel }}
                         </span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-x-8 gap-y-6 p-6 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                        <p class="text-sm text-slate-500">Nomor Inspeksi</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Nomor Inspeksi</p>
                         <p class="mt-1 break-words font-semibold text-slate-900">
                             {{ $inspection->inspection_number ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Nama Mitra</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Nama Mitra</p>
                         <p class="mt-1 break-words font-medium text-slate-900">
                             {{ $inspection->partner_name ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Brand</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Brand</p>
                         <p class="mt-1 break-words font-medium text-slate-900">
                             {{ $inspection->brand ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Kode Ruangan</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Kode Ruangan</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->room_code ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Kategori</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Kategori</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->category ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Lokasi</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Lokasi</p>
                         <p class="mt-1 break-words font-medium text-slate-900">
                             {{ $inspection->location ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Jenis Inspeksi</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Jenis Inspeksi</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->inspection_type ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Tanggal Inspeksi</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Tanggal Inspeksi</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->inspection_date?->format('d/m/Y') ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Waktu Inspeksi</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Waktu Inspeksi</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->inspection_time ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Nama Inspektor</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Nama Inspektor</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->inspector_name ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Jabatan Inspektor</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Jabatan Inspektor</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->inspector_position ?? '-' }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500">Terminal</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Terminal</p>
                         <p class="mt-1 font-medium text-slate-900">
                             {{ $inspection->terminal ?? '-' }}
                         </p>
                     </div>
 
-                    <div class="sm:col-span-2 lg:col-span-3">
-                        <p class="text-sm text-slate-500">Catatan Umum</p>
-                        <p class="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">
-                            {{ $inspection->notes ?: 'Tidak ada catatan umum.' }}
-                        </p>
+                    <div class="rounded-xl bg-slate-50 p-4 sm:col-span-2 lg:col-span-3">
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Catatan Umum</p>
+                        <p class="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">{{ $inspection->notes ?: 'Tidak ada catatan umum.' }}</p>
                     </div>
                 </div>
             </section>
@@ -217,7 +245,7 @@
                     : 0;
             @endphp
 
-            <section class="space-y-4">
+            <section id="ringkasan" class="scroll-mt-40 space-y-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">
                         Ringkasan Pemeriksaan
@@ -228,35 +256,35 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <p class="text-sm font-medium text-slate-500">Total Kriteria</p>
                         <p class="mt-2 text-3xl font-bold text-[#17365D]">
                             {{ $totalChecklist }}
                         </p>
                     </div>
 
-                    <div class="rounded-xl border border-green-200 bg-green-50 p-5">
-                        <p class="text-sm font-medium text-green-700">Sesuai</p>
-                        <p class="mt-2 text-3xl font-bold text-green-700">
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                        <p class="text-sm font-medium text-emerald-700">Sesuai</p>
+                        <p class="mt-2 text-3xl font-bold text-emerald-700">
                             {{ $totalSesuai }}
                         </p>
                     </div>
 
-                    <div class="rounded-xl border border-red-200 bg-red-50 p-5">
-                        <p class="text-sm font-medium text-red-700">Tidak Sesuai</p>
-                        <p class="mt-2 text-3xl font-bold text-red-700">
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-5">
+                        <p class="text-sm font-medium text-rose-700">Tidak Sesuai</p>
+                        <p class="mt-2 text-3xl font-bold text-rose-700">
                             {{ $totalTidakSesuai }}
                         </p>
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 bg-white p-5">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5">
                         <p class="text-sm font-medium text-slate-600">Tidak Berlaku</p>
                         <p class="mt-2 text-3xl font-bold text-slate-700">
                             {{ $totalTidakBerlaku }}
                         </p>
                     </div>
 
-                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
                         <p class="text-sm font-medium text-amber-700">Belum Diperiksa</p>
                         <p class="mt-2 text-3xl font-bold text-amber-700">
                             {{ $totalBelumDiperiksa }}
@@ -264,7 +292,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="mb-3 flex items-center justify-between gap-3">
                         <div>
                             <p class="font-semibold text-slate-800">Progres Checklist</p>
@@ -279,7 +307,7 @@
                     </div>
 
                     <div class="h-3 overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full rounded-full bg-[#17365D] transition-all duration-300"
+                        <div class="h-full rounded-full bg-gradient-to-r from-[#17365D] to-[#2B5C94] transition-all duration-300"
                              style="width: {{ $persentaseChecklist }}%">
                         </div>
                     </div>
@@ -367,7 +395,9 @@
 
             {{-- Form Simpan Checklist --}}
             <form action="{{ route('inspections.checklist.save', $inspection) }}"
-                  method="POST">
+                  method="POST"
+                  id="checklist"
+                  class="scroll-mt-40">
                 @csrf
                 @method('PUT')
 
@@ -392,16 +422,32 @@
                         $sectionItems = $checklistItems
                             ->where('section_code', $section['code'])
                             ->sortBy('sort_order');
+
+                        $sectionDone = $sectionItems->filter(
+                            fn ($i) => in_array($i->status, ['sesuai', 'tidak_sesuai', 'tidak_berlaku'], true)
+                        )->count();
                     @endphp
 
                     <section class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div class="border-b border-slate-200 bg-slate-50 px-5 py-4">
-                            <h3 class="font-bold text-slate-800">
-                                {{ $section['code'] }}. {{ $section['name'] }}
-                            </h3>
-                            <p class="mt-1 text-xs text-slate-500">
-                                {{ $sectionItems->count() }} kriteria
-                            </p>
+                        <div class="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#17365D] text-sm font-bold text-white">
+                                    {{ $section['code'] }}
+                                </span>
+
+                                <div>
+                                    <h3 class="font-bold text-slate-800">
+                                        {{ $section['name'] }}
+                                    </h3>
+                                    <p class="text-xs text-slate-500">
+                                        {{ $sectionItems->count() }} kriteria
+                                    </p>
+                                </div>
+                            </div>
+
+                            <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {{ $sectionItems->count() > 0 && $sectionDone === $sectionItems->count() ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-white text-slate-600 ring-slate-200' }}">
+                                {{ $sectionDone }}/{{ $sectionItems->count() }} diperiksa
+                            </span>
                         </div>
 
                         <div class="divide-y divide-slate-100">
@@ -439,14 +485,21 @@
                                                     'tidak_sesuai' => 'Tidak Sesuai',
                                                     'tidak_berlaku' => 'Tidak Berlaku',
                                                 ] as $value => $label)
-                                                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-2.5 transition hover:border-slate-300 hover:bg-slate-50 sm:flex-col sm:justify-center sm:gap-1 sm:text-center">
+                                                    @php
+                                                        $checkedStyle = match ($value) {
+                                                            'sesuai'        => 'has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-800',
+                                                            'tidak_sesuai'  => 'has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50 has-[:checked]:text-rose-800',
+                                                            default         => 'has-[:checked]:border-slate-500 has-[:checked]:bg-slate-100 has-[:checked]:text-slate-900',
+                                                        };
+                                                    @endphp
+                                                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-2.5 transition hover:border-slate-300 hover:bg-slate-50 sm:flex-col sm:justify-center sm:gap-1 sm:text-center {{ $checkedStyle }}">
                                                         <input type="radio"
                                                                name="checklist[{{ $item->id }}][status]"
                                                                value="{{ $value }}"
                                                                @checked(old("checklist.{$item->id}.status", $item->status) === $value)
                                                                class="h-4 w-4 cursor-pointer border-slate-300 text-[#17365D] focus:ring-[#17365D]">
 
-                                                        <span class="text-xs text-slate-700">
+                                                        <span class="text-xs font-medium">
                                                             {{ $label }}
                                                         </span>
                                                     </label>
@@ -522,14 +575,21 @@
                                                     'tidak_sesuai' => 'Tidak Sesuai',
                                                     'tidak_berlaku' => 'Tidak Berlaku',
                                                 ] as $value => $label)
-                                                    <label class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5">
+                                                    @php
+                                                        $checkedStyle = match ($value) {
+                                                            'sesuai'        => 'has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-800',
+                                                            'tidak_sesuai'  => 'has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50 has-[:checked]:text-rose-800',
+                                                            default         => 'has-[:checked]:border-slate-500 has-[:checked]:bg-slate-100 has-[:checked]:text-slate-900',
+                                                        };
+                                                    @endphp
+                                                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-2.5 transition hover:bg-slate-50 {{ $checkedStyle }}">
                                                         <input type="radio"
                                                                name="checklist[{{ $item->id }}][status]"
                                                                value="{{ $value }}"
                                                                @checked(old("checklist.{$item->id}.status", $item->status) === $value)
                                                                class="h-4 w-4 border-slate-300 text-[#17365D] focus:ring-[#17365D]">
 
-                                                        <span class="text-sm text-slate-700">
+                                                        <span class="text-sm font-medium">
                                                             {{ $label }}
                                                         </span>
                                                     </label>
@@ -566,7 +626,7 @@
             </form>
 
             {{-- Form Tambah Temuan Inspeksi --}}
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section id="temuan" class="scroll-mt-40 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-100 px-6 py-5">
                     <h3 class="text-base font-bold text-slate-800">
                         Tambah Temuan Inspeksi
@@ -641,7 +701,7 @@
                 </div>
 
                 @forelse ($findings as $finding)
-                    <div class="border-b border-slate-100 p-5 last:border-b-0">
+                    <div class="border-b border-l-4 border-slate-100 border-l-rose-400 p-5 last:border-b-0">
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                             @if ($finding->code)
                                 <span class="inline-flex w-fit rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
@@ -656,9 +716,7 @@
                             </p>
                         @endif
 
-                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">
-                            {{ $finding->description }}
-                        </p>
+                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{{ $finding->description }}</p>
                     </div>
                 @empty
                     <div class="p-6 text-center text-sm text-slate-500">
@@ -687,7 +745,7 @@
                 ];
             @endphp
 
-            <section class="space-y-5">
+            <section id="tanda-tangan" class="scroll-mt-40 space-y-5">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">
                         Tanda Tangan Para Pihak
@@ -724,7 +782,7 @@
                                     </h4>
 
                                     @if ($signatureSaved)
-                                        <p class="mt-1 text-xs text-green-700">
+                                        <p class="mt-1 text-xs text-emerald-700">
                                             Tanda tangan tersimpan:
                                             {{ $partySignature->signed_at?->format('d/m/Y H:i') ?? '-' }}
                                         </p>
@@ -735,7 +793,7 @@
                                     @endif
                                 </div>
 
-                                <span class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold {{ $signatureSaved ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                                <span class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold {{ $signatureSaved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
                                     {{ $signatureSaved ? 'Sudah Ditandatangani' : 'Menunggu Tanda Tangan' }}
                                 </span>
                             </div>
@@ -1055,7 +1113,7 @@
             </script>
 
             {{-- Form Upload Dokumentasi Foto --}}
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section id="foto" class="scroll-mt-40 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-100 px-6 py-5">
                     <h3 class="text-base font-bold text-slate-800">
                         Dokumentasi Foto Inspeksi
@@ -1171,16 +1229,16 @@
                     </p>
                 </div>
 
-                <div class="p-6">
+                <div class="grid gap-5 p-6 sm:grid-cols-2 xl:grid-cols-3">
                     @forelse ($photos as $photo)
-                        <article class="mb-5 overflow-hidden rounded-xl border border-slate-200 last:mb-0">
+                        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-md">
                             <a href="{{ asset('storage/' . $photo->file_path) }}"
                                target="_blank"
                                rel="noopener noreferrer">
                                 <img src="{{ asset('storage/' . $photo->file_path) }}"
                                      alt="{{ $photo->caption ?? 'Foto inspeksi' }}"
                                      loading="lazy"
-                                     class="h-56 w-full bg-slate-50 object-contain sm:h-72">
+                                     class="h-52 w-full bg-slate-50 object-contain">
                             </a>
 
                             <div class="p-4">
@@ -1190,9 +1248,7 @@
                                     </span>
                                 </div>
 
-                                <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
-                                    {{ $photo->caption ?: 'Tidak ada keterangan foto.' }}
-                                </p>
+                                <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">{{ $photo->caption ?: 'Tidak ada keterangan foto.' }}</p>
 
                                 @if ($photo->finding_id)
                                     <p class="mt-2 text-xs text-slate-500">
@@ -1202,7 +1258,7 @@
                             </div>
                         </article>
                     @empty
-                        <div class="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center">
+                        <div class="col-span-full rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center">
                             <p class="text-sm font-medium text-slate-600">
                                 Belum ada dokumentasi foto untuk inspeksi ini.
                             </p>
@@ -1250,6 +1306,5 @@
                 </section>
             @endif
 
-        </div>
     </div>
 </x-app-layout>
